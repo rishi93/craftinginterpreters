@@ -36,6 +36,8 @@ public class List {
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
+
+        if (hadError) System.exit(65);
     }
 
     private static void runPrompt() throws IOException {
@@ -54,6 +56,9 @@ public class List {
             String line = reader.readLine();
             if (line == null) break;
             run(line);
+
+            // If the user makes a mistake, it shouldn't kill their entire session
+            hadError = false;
         }
     }
 
@@ -65,5 +70,27 @@ public class List {
         for(Token token : tokens) {
             System.out.println(token);
         }
+    }
+
+    /*
+        If there is an error in the source code, tell the user
+        where the error is
+
+        It's good engineering practice to separate the code that generates
+        the errors from the code that reports them
+
+        Various phases of the front-end will detect errors, but it's not really
+        their job to know how to present that to a user
+    */
+    static void error(int line, String message) {
+        report(line, "", message);
+    }
+
+    private static void report(int line, String where, String message) {
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
+        // We use this to ensure we don't try to execute code that has a known error
+        // Also it let's us exit with a non-zero exit code like a good command line
+        // citizen should
+        hadError = true;
     }
 }
