@@ -94,3 +94,13 @@ public class List {
         hadError = true;
     }
 }
+
+/*
+    Scan through the characters and group them together into the smallest
+    sequences that still represent something
+
+    Smallest sequence of characters that represent something => Lexeme
+    Lexeme + other useful information => Token
+    Eg: in this line of code; var x = 123
+    'var', 'x', '=', and '123' are the lexemes
+*/
