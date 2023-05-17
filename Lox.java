@@ -68,10 +68,18 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
 
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+
+        if(hadError) return;
+
+        System.out.println(new AstPrinter().print(expression));
         // For now, just print the tokens
+        /*
         for(Token token : tokens) {
             System.out.println(token);
         }
+        */
     }
 
     /*
@@ -94,6 +102,14 @@ public class Lox {
         // Also it let's us exit with a non-zero exit code like a good command line
         // citizen should
         hadError = true;
+    }
+
+    static void error(Token token, String message) {
+        if(token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at " + token.lexeme + "'", message);
+        }
     }
 }
 
