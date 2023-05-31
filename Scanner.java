@@ -85,8 +85,7 @@ class Scanner {
             It's like a conditional advance(). We only consume the
             current character if it's what we're looking for
         */
-        if (isAtEnd()) return false;
-        if (source.charAt(current) != expected) return false;
+        if (peek() != expected) return false;
 
         current += 1;
         return true;
