@@ -1,3 +1,4 @@
+package lox;
 /*
     There are all manner of ways, a language implementation can make a computer
     do what the user's source code commands.
@@ -29,7 +30,6 @@
 
     Instead we reuse the Visitor pattern
 */
-package lox;
 
 /*
     The return type of the visit methods will be Object, the root class that
@@ -37,7 +37,25 @@ package lox;
     To satisfy the Visitor interface, we need to define visit methods for each of
     the four expression tree classes our parser produces
 */
-class Interpeter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object> {
+    /*
+        The visit methods are sort of the guts of the Interpreter class, where
+        the real work happens. We need to wrap a skin around them to interface
+        with the rest of the program. The below public API is simply one method
+    */
+    void interpret(Expr expression) {
+        try {
+            Object value = evaluate(expression);
+            System.out.println(stringify(value));
+        } catch (RuntimeError error) {
+            Lox.runtimeError(error);
+        }
+    }
+
+    private Object evaluate(Expr expr) {
+        return expr.accept(this);
+    }
+
     @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
@@ -49,10 +67,6 @@ class Interpeter implements Expr.Visitor<Object> {
     @Override
     public Object visitGroupingExpr(Expr.Grouping expr) {
         return evaluate(expr.expression);
-    }
-
-    private Object evaluate(Expr expr) {
-        return expr.accept(this);
     }
 
     private void checkNumberOperand(Token operator, Object operand) {
@@ -169,5 +183,28 @@ class Interpeter implements Expr.Visitor<Object> {
         if (a == null) return false;
 
         return a.equals(b);
+    }
+
+    /*
+        This is another of those pieces of code, that crosses the membrane
+        between the user's view of Lox objects and their internal representation
+        in Java.
+        The two edge cases are nil, which we represent using Java's null and
+        numbers.
+        Lox uses double-precision numbrers even for integer values, they should
+        print without a decimal point.
+    */
+    private String stringify(Object object) {
+        if(object == null) return "nil";
+
+        if(object instanceof Double) {
+            String text = object.toString();
+            if(text.endsWith(".0")) {
+                text = text.substring(0, text.length() - 2);
+            }
+            return text;
+        }
+
+        return object.toString();
     }
 }
