@@ -13,4 +13,8 @@ classes to help us represent our Tokens
 tree structure to represent expressions). We have the Expr classes to help us
 represent our syntax tree nodes
 
+3. Third is the Interpreter -> Takes the syntax tree and executes it directly (this 
+is the easiest approach). The other approach is to turn into bytecode for a virtual
+machine to execute
+
 This is a work-in-progress (as all things in life are)
