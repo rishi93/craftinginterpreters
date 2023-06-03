@@ -1,4 +1,6 @@
 package lox;
+
+import java.util.List;
 /*
     There are all manner of ways, a language implementation can make a computer
     do what the user's source code commands.
@@ -37,16 +39,22 @@ package lox;
     To satisfy the Visitor interface, we need to define visit methods for each of
     the four expression tree classes our parser produces
 */
-class Interpreter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     /*
         The visit methods are sort of the guts of the Interpreter class, where
         the real work happens. We need to wrap a skin around them to interface
         with the rest of the program. The below public API is simply one method
     */
-    void interpret(Expr expression) {
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            /*
+                Object value = evaluate(expression);
+                System.out.println(stringify(value));
+            */
+            // Modify the old interpret() method to accept a list of statements (a program)
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
@@ -54,6 +62,44 @@ class Interpreter implements Expr.Visitor<Object> {
 
     private Object evaluate(Expr expr) {
         return expr.accept(this);
+    }
+
+    // The statement analogue to the evaluate() method we have for expressions
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    /*
+        Unlike expressions, statements produce no values, so the return type of 
+        the visit methods is Void, not Object.
+    */
+
+    /*
+        Java doesn't let you use lowercase "void" as a generic type argument
+        for obscure reasons having to do with type erasures and the stack. Instead,
+        there is a separate Void type specifically for this use. Sort of a "boxed
+        void" like "Integer" is for "int".
+    */
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        /*
+            We evalute the inner expression using our existing evaluate() method
+            and discard the value. Then we return null. Java requires that to
+            satisfy the special capitalized Void return type.
+        */
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        /*
+            Before discarding the expression's value, we convert it to a string
+            using the stringify() method and then dump it to stdout.
+        */
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
     }
 
     @Override
@@ -152,6 +198,14 @@ class Interpreter implements Expr.Visitor<Object> {
                     still often overload it for adding both integers and floating
                     point numbers
                 */
+
+            /*
+                Allowing comparisons on types other than numbers could be useful.
+                Eg: 'a' < 'z'
+                Even comparisons among mixed types, like 3 < "pancakes" could be
+                handy to enable things like ordered collections of heterogenous types.
+                Or it could simply lead to bugs and confusion.
+            */
             case LESS:
                 checkNumberOperands(expr.operator, left, right);
                 return (double)left < (double)right;

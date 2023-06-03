@@ -1,6 +1,7 @@
 package lox;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import static lox.TokenType.*;
 
@@ -19,12 +20,60 @@ class Parser {
     }
 
     /* An initial method to kick it off */
+    /*
+        The parser's parse() method that parses and returns a single expression
+        was a temporary hack to get the last chapter up and running. Now that our
+        grammar has the correct starting rule, program, we can turn parse() into
+        the real deal.
+    */
+    /*
     Expr parse() {
         try {
             return expression();
         } catch (ParseError error){
             return null;
         }
+    }
+    */
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while(!isAtEnd()) {
+            statements.add(statement());
+        }
+
+        return statements;
+    }
+
+    private Stmt statement() {
+        if(match(PRINT)) return printStatement();
+
+        /*
+            A print token means it's obviously a print statement.
+
+            If the next token doesn't look like any known kind of statement, we
+            assume it must be an expression statement. That's the typical fallthrough
+            case, since it's hard to proactively recognize an expression from it's
+            first token.
+        */
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        /*
+            Since we already matched and consumed the print token itself, we
+            don't need to do that here. We parse the subsequent expression, consume
+            the terminating semicolon, and emit the syntax tree
+        */
+        Expr value = expression();
+
+        consume(SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
     }
 
     private boolean isAtEnd() {
