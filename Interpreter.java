@@ -45,6 +45,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         the real work happens. We need to wrap a skin around them to interface
         with the rest of the program. The below public API is simply one method
     */
+    private Environment environment = new Environment();
+
     void interpret(List<Stmt> statements) {
         try {
             /*
@@ -103,6 +105,29 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        /*
+            If the variable has an initializer, we evaluate it. If not, we could
+            have made this a syntax error in the parser by requiring an initializer.
+            Most languages don't, so it feels a bit harsh to do so in Lox.
+
+            We'd let you define an uninitialized variable, but if you accesssed
+            it before assigning to it, a runtime error could be raised. But most
+            dynamically typed languages, don't do that. Instead, we'll keep it
+            simple and say that Lox sets a variable to nil if it isn't explicitly
+            initialized.
+        */
+        Object value = null;
+
+        if(stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
+        }
+
+        environment.define(stmt.name.lexeme, value);
+        return null;
+    }
+
+    @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
     }
@@ -142,6 +167,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         // Unreachable
         return null;
+    }
+
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return environment.get(expr.name);
     }
 
     /* We need to decide what happens when you use something other than true
