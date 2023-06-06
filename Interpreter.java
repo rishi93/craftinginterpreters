@@ -128,6 +128,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
+        /*
+            The last thing the visit() method does is return the assigned value.
+            That's because assignment is an expression that can be nested inside
+            other expression, like so:
+            var a = 1;
+            print a = 2; // prints 2.
+        */
+    }
+
+    @Override
     public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
     }

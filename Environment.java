@@ -40,6 +40,23 @@ class Environment {
 
         throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
+
+    /*
+        Unlike Python and Ruby, Lox doesn't do implicit variable declaration.
+
+        The key difference between assignment and definition is that assignment
+        is not allowed to create a new variable. In terms of our implementation,
+        that means it's a runtime error if the key doesn't already exist in the
+        environment's variable map.
+    */
+    void assign(Token name, Object value) {
+        if(values.containsKey(name.lexeme)) {
+            values.put(name.lexeme, value);
+            return;
+        }
+
+        throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+    }
 /*
     Side note:
     
